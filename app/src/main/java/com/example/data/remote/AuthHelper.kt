@@ -9,12 +9,12 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
-import com.example.R
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -29,6 +29,26 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 private const val AUTH_TAG = "Auth"
+private const val WEB_CLIENT_ID_RES_NAME = "default_web_client_id"
+
+/**
+ * Resolves the Google Services-generated default_web_client_id string resource dynamically
+ * so CI builds without google-services.json still compile cleanly while runtime lookup
+ * remains identical whenever google-services.json is bundled.
+ */
+private fun resolveDefaultWebClientId(context: Context): String? {
+    val resId = context.resources.getIdentifier(
+        WEB_CLIENT_ID_RES_NAME,
+        "string",
+        context.packageName
+    )
+    if (resId == 0) return null
+    return try {
+        context.getString(resId).takeIf { it.isNotBlank() }
+    } catch (_: Exception) {
+        null
+    }
+}
 
 fun Context.findActivity(): Activity? {
     var ctx = this
@@ -57,13 +77,16 @@ fun attemptSilentGoogleSignIn(
     onSuccess: () -> Unit,
     onUnauthenticated: () -> Unit
 ) {
+    if (FirebaseApp.getApps(context).isEmpty()) {
+        onUnauthenticated()
+        return
+    }
     if (Firebase.auth.currentUser != null) {
         onSuccess()
         return
     }
-    val clientId = try {
-        context.getString(R.string.default_web_client_id)
-    } catch (_: Exception) {
+    val clientId = resolveDefaultWebClientId(context)
+    if (clientId == null) {
         onUnauthenticated()
         return
     }
@@ -109,10 +132,13 @@ fun launchInteractiveGoogleSignIn(
     onCancelled: () -> Unit,
     onError: (String) -> Unit
 ) {
-    val clientId = try {
-        context.getString(R.string.default_web_client_id)
-    } catch (_: Exception) {
-        onError("Google Sign-In configuration missing: default_web_client_id not found.")
+    if (FirebaseApp.getApps(context).isEmpty()) {
+        onError("Firebase config (google-services.json) is missing in this build.")
+        return
+    }
+    val clientId = resolveDefaultWebClientId(context)
+    if (clientId == null) {
+        onError("Google Sign-In configuration missing: default_web_client_id not found. Add google-services.json and rebuild.")
         return
     }
 

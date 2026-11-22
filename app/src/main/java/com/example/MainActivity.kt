@@ -32,7 +32,10 @@ import com.example.ui.screens.onboarding.OnboardingScreen
 import com.example.ui.screens.onboarding.SplashScreen
 import com.example.ui.theme.CodeverseTheme
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -59,8 +62,11 @@ private fun CodeverseRoot() {
     val localPrefs by prefsStore.preferencesFlow.collectAsStateWithLifecycle(initialValue = LocalPreferences())
     val selectedLanguage = AppLanguage.fromCode(localPrefs.languageCode)
 
-    val auth = Firebase.auth
-    val currentUser by auth.authStateFlow().collectAsStateWithLifecycle(initialValue = auth.currentUser)
+    val auth = remember(context) {
+        if (FirebaseApp.getApps(context).isNotEmpty()) Firebase.auth else null
+    }
+    val authFlow = remember(auth) { auth?.authStateFlow() ?: flowOf<FirebaseUser?>(null) }
+    val currentUser by authFlow.collectAsStateWithLifecycle(initialValue = auth?.currentUser)
     var splashCompleted by remember { mutableStateOf(false) }
 
     // Attempt silent Google auto-sign-in once during Splash
