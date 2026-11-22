@@ -1,0 +1,247 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Learner profile, XP, streak, gems, curriculum completion, and BYTE mascot customization.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the learner."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Learner display name."
+        },
+        "avatarPreset": {
+          "type": "string",
+          "description": "Selected avatar preset identifier."
+        },
+        "languageCode": {
+          "type": "string",
+          "enum": ["en", "hi", "hinglish"],
+          "description": "Preferred UI instruction language."
+        },
+        "dailyGoalMinutes": {
+          "type": "integer",
+          "description": "Daily learning target in minutes."
+        },
+        "learningTrack": {
+          "type": "string",
+          "description": "Chosen learning focus track."
+        },
+        "xp": {
+          "type": "integer",
+          "description": "Total earned experience points."
+        },
+        "level": {
+          "type": "integer",
+          "description": "Current learner level."
+        },
+        "streakDays": {
+          "type": "integer",
+          "description": "Current consecutive learning streak in days."
+        },
+        "gems": {
+          "type": "integer",
+          "description": "Virtual currency earned from lessons and missions."
+        },
+        "completedLessonIds": {
+          "type": "array",
+          "description": "IDs of completed lessons."
+        },
+        "unlockedAchievementIds": {
+          "type": "array",
+          "description": "IDs of unlocked achievements."
+        },
+        "completedMissionIds": {
+          "type": "array",
+          "description": "IDs of completed daily missions."
+        },
+        "defeatedBossWorldIds": {
+          "type": "array",
+          "description": "World IDs whose boss battle has been defeated."
+        },
+        "byteColorTheme": {
+          "type": "string",
+          "description": "BYTE mascot chassis color theme."
+        },
+        "byteAccessory": {
+          "type": "string",
+          "description": "BYTE mascot equipped accessory."
+        },
+        "onboardingDone": {
+          "type": "boolean",
+          "description": "Whether initial onboarding has been completed."
+        },
+        "proMember": {
+          "type": "boolean",
+          "description": "Whether Codeverse Pro plan is active locally."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "displayName",
+        "avatarPreset",
+        "languageCode",
+        "dailyGoalMinutes",
+        "learningTrack",
+        "xp",
+        "level",
+        "streakDays",
+        "gems",
+        "completedLessonIds",
+        "unlockedAchievementIds",
+        "completedMissionIds",
+        "defeatedBossWorldIds",
+        "byteColorTheme",
+        "byteAccessory",
+        "onboardingDone",
+        "proMember",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CodeProject": {
+      "title": "CodeProject",
+      "description": "Saved multi-file HTML/CSS/JS project created in the Codeverse Playground.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "title": {
+          "type": "string",
+          "description": "Project title."
+        },
+        "description": {
+          "type": "string",
+          "description": "Short project summary."
+        },
+        "htmlCode": {
+          "type": "string",
+          "description": "HTML source file content."
+        },
+        "cssCode": {
+          "type": "string",
+          "description": "CSS source file content."
+        },
+        "jsCode": {
+          "type": "string",
+          "description": "JavaScript source file content."
+        },
+        "templateTag": {
+          "type": "string",
+          "description": "Project category tag."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "description",
+        "htmlCode",
+        "cssCode",
+        "jsCode",
+        "templateTag",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "PII-free public weekly leaderboard ranking entry.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the learner."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Public learner handle."
+        },
+        "avatarPreset": {
+          "type": "string",
+          "description": "Avatar preset identifier."
+        },
+        "xp": {
+          "type": "integer",
+          "description": "Weekly leaderboard XP."
+        },
+        "level": {
+          "type": "integer",
+          "description": "Current level."
+        },
+        "streakDays": {
+          "type": "integer",
+          "description": "Current streak count."
+        },
+        "league": {
+          "type": "string",
+          "description": "Current league name."
+        },
+        "publicVisible": {
+          "type": "boolean",
+          "description": "Whether entry is visible on the leaderboard."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "displayName",
+        "avatarPreset",
+        "xp",
+        "level",
+        "streakDays",
+        "league",
+        "publicVisible",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private learner progress and preferences scoped to authenticated user."
+    },
+    "/users/{userId}/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/CodeProject" },
+      "description": "Saved multi-file playground projects owned by the user."
+    },
+    "/leaderboard/{userId}": {
+      "schema": { "$ref": "#/entities/LeaderboardEntry" },
+      "description": "PII-free weekly leaderboard rankings readable by authenticated learners."
+    }
+  }
+}

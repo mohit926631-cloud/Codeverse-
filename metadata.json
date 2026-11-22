@@ -1,0 +1,6 @@
+{
+  "name": "Codeverse",
+  "description": "Interactive Android coding education app with BYTE mascot, 7-world full-stack curriculum, live coding playground, gamification, and AI Tutor.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

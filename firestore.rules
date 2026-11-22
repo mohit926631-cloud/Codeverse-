@@ -1,0 +1,184 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidStringList(listVal, maxSize) {
+      return listVal is list &&
+             listVal.size() <= maxSize &&
+             (listVal.size() == 0 || (listVal[0] is string && listVal[0].size() <= 80));
+    }
+
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId == request.auth.uid && data.userId.size() <= 128 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 50 &&
+             data.avatarPreset is string && data.avatarPreset.size() >= 1 && data.avatarPreset.size() <= 30 &&
+             data.languageCode in ['en', 'hi', 'hinglish'] &&
+             data.dailyGoalMinutes is int && data.dailyGoalMinutes >= 5 && data.dailyGoalMinutes <= 120 &&
+             data.learningTrack is string && data.learningTrack.size() >= 1 && data.learningTrack.size() <= 40 &&
+             data.xp is int && data.xp >= 0 && data.xp <= 10000000 &&
+             data.level is int && data.level >= 1 && data.level <= 999 &&
+             data.streakDays is int && data.streakDays >= 0 && data.streakDays <= 10000 &&
+             data.gems is int && data.gems >= 0 && data.gems <= 1000000 &&
+             isValidStringList(data.completedLessonIds, 200) &&
+             isValidStringList(data.unlockedAchievementIds, 100) &&
+             isValidStringList(data.completedMissionIds, 50) &&
+             isValidStringList(data.defeatedBossWorldIds, 20) &&
+             data.byteColorTheme is string && data.byteColorTheme.size() >= 1 && data.byteColorTheme.size() <= 30 &&
+             data.byteAccessory is string && data.byteAccessory.size() >= 1 && data.byteAccessory.size() <= 30 &&
+             data.onboardingDone is bool &&
+             data.proMember is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidCodeProject(data) {
+      return data.userId is string && data.userId == request.auth.uid && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 80 &&
+             data.description is string && data.description.size() <= 300 &&
+             data.htmlCode is string && data.htmlCode.size() <= 50000 &&
+             data.cssCode is string && data.cssCode.size() <= 50000 &&
+             data.jsCode is string && data.jsCode.size() <= 50000 &&
+             data.templateTag is string && data.templateTag.size() >= 1 && data.templateTag.size() <= 30 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidLeaderboardEntry(data) {
+      return data.userId is string && data.userId == request.auth.uid && data.userId.size() <= 128 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 50 &&
+             data.avatarPreset is string && data.avatarPreset.size() >= 1 && data.avatarPreset.size() <= 30 &&
+             data.xp is int && data.xp >= 0 && data.xp <= 10000000 &&
+             data.level is int && data.level >= 1 && data.level <= 999 &&
+             data.streakDays is int && data.streakDays >= 0 && data.streakDays <= 10000 &&
+             data.league is string && data.league.size() >= 1 && data.league.size() <= 30 &&
+             data.publicVisible is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'displayName', 'avatarPreset', 'languageCode',
+                         'dailyGoalMinutes', 'learningTrack', 'xp', 'level',
+                         'streakDays', 'gems', 'completedLessonIds', 'unlockedAchievementIds',
+                         'completedMissionIds', 'defeatedBossWorldIds', 'byteColorTheme',
+                         'byteAccessory', 'onboardingDone', 'proMember', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'displayName', 'avatarPreset', 'languageCode',
+                         'dailyGoalMinutes', 'learningTrack', 'xp', 'level',
+                         'streakDays', 'gems', 'completedLessonIds', 'unlockedAchievementIds',
+                         'completedMissionIds', 'defeatedBossWorldIds', 'byteColorTheme',
+                         'byteAccessory', 'onboardingDone', 'proMember', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidUserProfile(incoming());
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'displayName', 'avatarPreset', 'languageCode',
+                         'dailyGoalMinutes', 'learningTrack', 'xp', 'level',
+                         'streakDays', 'gems', 'completedLessonIds', 'unlockedAchievementIds',
+                         'completedMissionIds', 'defeatedBossWorldIds', 'byteColorTheme',
+                         'byteAccessory', 'onboardingDone', 'proMember', 'updatedAt'
+                       ]);
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /projects/{projectId} {
+        allow get: if isOwner(userId) && isValidId(projectId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(projectId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'title', 'description', 'htmlCode',
+                           'cssCode', 'jsCode', 'templateTag', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'title', 'description', 'htmlCode',
+                           'cssCode', 'jsCode', 'templateTag', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidCodeProject(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(projectId) &&
+                         isValidCodeProject(incoming()) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'title', 'description', 'htmlCode', 'cssCode',
+                           'jsCode', 'templateTag', 'updatedAt'
+                         ]);
+
+        allow delete: if isOwner(userId) && isValidId(projectId);
+      }
+    }
+
+    match /leaderboard/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) &&
+                    (request.auth.uid == userId || existing().publicVisible == true);
+      allow list: if isSignedIn() && existing().publicVisible == true;
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'displayName', 'avatarPreset', 'xp',
+                         'level', 'streakDays', 'league', 'publicVisible',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'displayName', 'avatarPreset', 'xp',
+                         'level', 'streakDays', 'league', 'publicVisible',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidLeaderboardEntry(incoming());
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidLeaderboardEntry(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'displayName', 'avatarPreset', 'xp', 'level',
+                         'streakDays', 'league', 'publicVisible', 'updatedAt'
+                       ]);
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+    }
+  }
+}
